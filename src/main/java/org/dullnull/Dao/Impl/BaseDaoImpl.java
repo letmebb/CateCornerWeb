@@ -9,7 +9,7 @@ import org.dullnull.Dao.BaseDao;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 public class BaseDaoImpl<T> implements BaseDao<T> {
 	private Class<T> cls;
@@ -21,13 +21,19 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
 	@Resource
 	protected SessionFactory sessionFactory;
 
-	@Resource
-	protected JdbcTemplate jdbcTemplate;
-
 	public Session getSession() {
-		return sessionFactory.getCurrentSession();
+		try {
+			return sessionFactory.openSession();
+			//return sessionFactory.getCurrentSession();
+			
+		} catch (Exception e) {
+			System.out.println("getCurrentSession失败");
+			return null;
+		}
+		
 	}
-
+	
+	
 	public void add(T entity) {
 		try {
 			getSession().save(entity);
@@ -52,10 +58,11 @@ public class BaseDaoImpl<T> implements BaseDao<T> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public T findById(Serializable id) {
 		T t = null;
 		try {
-			t = getSession().get(cls, id);
+			t = (T) getSession().get(cls, id);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
